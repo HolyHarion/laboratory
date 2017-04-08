@@ -42,3 +42,73 @@ Regex #2 breakdown:
     ^: start of line
     .*: zero or more characters
     $: end of line
+
+
+
+
+Expanding on the sudo -l -U test, one can use getent passwd to determine the users who can use sudo. Using getent allows us to access users who may not be present in the passwd file, such as LDAP users:
+
+getent passwd | cut -f1 -d: | sudo xargs -L1 sudo -l -U | grep -v 'not allowed'
+
+sudo -U does not return a non-zero exit value that we could take advantage of, so we are reduced to grepping the output.
+
+This command returns a list of users with sudo rights:
+
+awk -F ":" '{ system("groups " $1 " | grep -P \"[[:space:]]sudo([[:space:]]|$)\"") }' /etc/passwd
+Output is (e.g.):
+
+<username> : <username> adm cdrom sudo dip plugdev lpadmin sambashare docker
+
+If only the user name to be displayed, then this command:
+
+awk -F ":" '{ system("groups " $1 " | grep -P \"[[:space:]]sudo([[:space:]]|$)\"") }' | awk -F ":" '{ print $1 }' /etc/passwd
+
+Use command
+
+#visudo 
+
+will allow an administrator to inspect and amend the privileges of groups that can use the sudo command. 
+
+To list all local users you can use:
+
+cut -d: -f1 /etc/passwd
+
+To list all users capable of authenticating (in some way), including non-local, see this reply: http://askubuntu.com/a/414561/571941
+
+Some more useful user-management commands (also limited to local users):
+
+To add a new user you can use:
+
+sudo adduser new_username
+
+or:
+
+sudo useradd new_username
+
+See also: What is the difference between adduser and useradd?
+
+To remove/delete a user, first you can use:
+
+sudo userdel username
+
+Then you may want to delete the home directory for the deleted user account :
+
+sudo rm -r /home/username
+
+(Please use with caution the above command!)
+
+To modify the username of a user:
+
+usermod -l new_username old_username
+
+To change the password for a user:
+
+sudo passwd username
+
+To change the shell for a user:
+
+sudo chsh username
+
+To change the details for a user (for example real name):
+
+sudo chfn username
